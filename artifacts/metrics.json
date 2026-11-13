@@ -1,0 +1,244 @@
+{
+  "overall": {
+    "n": 864410.0,
+    "persistence_mae": 2.8939242362976074,
+    "persistence_rmse": 4.839761734008789,
+    "seasonal_naive_day_mae": 4.393343448638916,
+    "seasonal_naive_day_rmse": 6.109407901763916,
+    "seasonal_naive_week_mae": 5.4614996910095215,
+    "seasonal_naive_week_rmse": 7.816767692565918,
+    "lightgbm_mae": 2.2753809298694407,
+    "lightgbm_rmse": 3.508905219357982,
+    "lightgbm_no_covid_mae": 2.2735564698782196,
+    "lightgbm_no_covid_rmse": 3.5139860679531205,
+    "lightgbm_no_weather_mae": 2.277900938982052,
+    "lightgbm_no_weather_rmse": 3.5174293958908645
+  },
+  "scored_rows": 864410,
+  "test_rows_with_observed_target": 877260,
+  "folds": [
+    {
+      "fold": 0,
+      "test_start": "2021-02-15 00:00:00+01:00",
+      "test_end": "2021-02-22 00:00:00+01:00",
+      "train_rows": 1087254,
+      "test_rows": 113760
+    },
+    {
+      "fold": 1,
+      "test_start": "2021-02-22 00:00:00+01:00",
+      "test_end": "2021-03-01 00:00:00+01:00",
+      "train_rows": 1201014,
+      "test_rows": 114060
+    },
+    {
+      "fold": 2,
+      "test_start": "2021-03-01 00:00:00+01:00",
+      "test_end": "2021-03-08 00:00:00+01:00",
+      "train_rows": 1315134,
+      "test_rows": 112320
+    },
+    {
+      "fold": 3,
+      "test_start": "2021-03-08 00:00:00+01:00",
+      "test_end": "2021-03-15 00:00:00+01:00",
+      "train_rows": 1427334,
+      "test_rows": 112740
+    },
+    {
+      "fold": 4,
+      "test_start": "2021-03-15 00:00:00+01:00",
+      "test_end": "2021-03-22 00:00:00+01:00",
+      "train_rows": 1540374,
+      "test_rows": 112320
+    },
+    {
+      "fold": 5,
+      "test_start": "2021-03-22 00:00:00+01:00",
+      "test_end": "2021-03-29 00:00:00+02:00",
+      "train_rows": 1652754,
+      "test_rows": 114780
+    },
+    {
+      "fold": 6,
+      "test_start": "2021-03-29 00:00:00+02:00",
+      "test_end": "2021-04-05 00:00:00+02:00",
+      "train_rows": 1766814,
+      "test_rows": 120660
+    },
+    {
+      "fold": 7,
+      "test_start": "2021-04-05 00:00:00+02:00",
+      "test_end": "2021-04-09 17:00:00+02:00",
+      "train_rows": 1887414,
+      "test_rows": 76620
+    }
+  ],
+  "lightgbm_vs": {
+    "persistence": {
+      "diff": -0.6185432496287144,
+      "ci_low": -0.6497252398979212,
+      "ci_high": -0.5897885177934371,
+      "blocks": 3240
+    },
+    "seasonal_naive_day": {
+      "diff": -2.1179625066942274,
+      "ci_low": -2.1843494105714742,
+      "ci_high": -2.056005240696369,
+      "blocks": 3240
+    },
+    "seasonal_naive_week": {
+      "diff": -3.1861188214059957,
+      "ci_low": -3.3160803468166424,
+      "ci_high": -3.0538324116021496,
+      "blocks": 3240
+    },
+    "lightgbm_no_covid": {
+      "diff": 0.0018244599912208318,
+      "ci_low": -0.0009236411846682936,
+      "ci_high": 0.004564458515625633,
+      "blocks": 3240
+    },
+    "lightgbm_no_weather": {
+      "diff": -0.0025200091126114693,
+      "ci_low": -0.005957120966423787,
+      "ci_high": 0.0009425359709155811,
+      "blocks": 3240
+    }
+  },
+  "lightgbm_vs_by_horizon": {
+    "1": {
+      "persistence": {
+        "diff": 0.08556723143553596,
+        "ci_low": 0.07930199945258974,
+        "ci_high": 0.09244525575770339,
+        "blocks": 3240
+      },
+      "seasonal_naive_day": {
+        "diff": -3.352542976433289,
+        "ci_low": -3.4414009588235137,
+        "ci_high": -3.2673874753925523,
+        "blocks": 3240
+      },
+      "seasonal_naive_week": {
+        "diff": -4.41961910267794,
+        "ci_low": -4.568330393377087,
+        "ci_high": -4.262182437663399,
+        "blocks": 3240
+      }
+    },
+    "2": {
+      "persistence": {
+        "diff": -0.059994414779973096,
+        "ci_low": -0.07064344439299632,
+        "ci_high": -0.04955104015159443,
+        "blocks": 3240
+      },
+      "seasonal_naive_day": {
+        "diff": -3.0002528764890926,
+        "ci_low": -3.085721861566096,
+        "ci_high": -2.917029610621675,
+        "blocks": 3240
+      },
+      "seasonal_naive_week": {
+        "diff": -4.069021162239033,
+        "ci_low": -4.2145188527548365,
+        "ci_high": -3.9140014582341873,
+        "blocks": 3240
+      }
+    },
+    "4": {
+      "persistence": {
+        "diff": -0.3387064932849309,
+        "ci_low": -0.361297263622219,
+        "ci_high": -0.3169808459999662,
+        "blocks": 3240
+      },
+      "seasonal_naive_day": {
+        "diff": -2.531185199394506,
+        "ci_low": -2.613618983932667,
+        "ci_high": -2.4504077526443084,
+        "blocks": 3240
+      },
+      "seasonal_naive_week": {
+        "diff": -3.601472406386405,
+        "ci_low": -3.745673659042889,
+        "ci_high": -3.4492110443180803,
+        "blocks": 3240
+      }
+    },
+    "8": {
+      "persistence": {
+        "diff": -0.8987203282751834,
+        "ci_low": -0.9482064969124367,
+        "ci_high": -0.8523360068793482,
+        "blocks": 3240
+      },
+      "seasonal_naive_day": {
+        "diff": -1.9474517574807488,
+        "ci_low": -2.022097754317673,
+        "ci_high": -1.8740316345000727,
+        "blocks": 3240
+      },
+      "seasonal_naive_week": {
+        "diff": -3.015666048149228,
+        "ci_low": -3.1533031458500873,
+        "ci_high": -2.866797855128225,
+        "blocks": 3240
+      }
+    },
+    "16": {
+      "persistence": {
+        "diff": -1.9042598043144328,
+        "ci_low": -1.9985356133456758,
+        "ci_high": -1.815790475721019,
+        "blocks": 3240
+      },
+      "seasonal_naive_day": {
+        "diff": -1.270264887718369,
+        "ci_low": -1.3382065479082508,
+        "ci_high": -1.2000111193724432,
+        "blocks": 3240
+      },
+      "seasonal_naive_week": {
+        "diff": -2.3386200037616476,
+        "ci_low": -2.4717372781992935,
+        "ci_high": -2.1960234050061813,
+        "blocks": 3240
+      }
+    },
+    "48": {
+      "persistence": {
+        "diff": -0.5976114342787857,
+        "ci_low": -0.6556784019396301,
+        "ci_high": -0.5481101453460532,
+        "blocks": 3180
+      },
+      "seasonal_naive_day": {
+        "diff": -0.5976114342787857,
+        "ci_low": -0.6556784019396301,
+        "ci_high": -0.5481101453460532,
+        "blocks": 3180
+      },
+      "seasonal_naive_week": {
+        "diff": -1.6638464663032915,
+        "ci_low": -1.7917249532944652,
+        "ci_high": -1.5363333078612111,
+        "blocks": 3180
+      }
+    }
+  },
+  "params": {
+    "objective": "l2",
+    "learning_rate": 0.05,
+    "num_leaves": 63,
+    "min_data_in_leaf": 200,
+    "feature_fraction": 0.8,
+    "bagging_fraction": 0.8,
+    "bagging_freq": 1,
+    "lambda_l2": 1.0,
+    "num_threads": 4,
+    "verbose": -1,
+    "seed": 7
+  }
+}

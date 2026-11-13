@@ -1,0 +1,27 @@
+{
+  "raw_rows": 10986730,
+  "raw_stations": 1404,
+  "R3_station_keys_with_several_names": 2,
+  "R3_names_at_several_locations": 7,
+  "R4_stations_with_capacity_change": 16,
+  "R2_duplicate_rows_dropped": 0,
+  "R4_capacity_zero_rows": 64762,
+  "R5_bikes_above_capacity_rows_kept": 2036,
+  "R6_offline_rows_masked": 217468,
+  "R7_frozen_rows_masked": 17600,
+  "R7_frozen_runs": 272,
+  "R8_grid_points": 9036144,
+  "R8_grid_points_without_snapshot": 1282894,
+  "R8_grid_points_masked_offline_or_frozen": 165240,
+  "R9_grid_points_imputed": 880715,
+  "R9_grid_points_left_missing": 567419,
+  "R10_stations_total": 1404,
+  "R10_stations_eligible": 1361,
+  "R10_stations_selected": 60,
+  "selected": {
+    "grid_points": 386160,
+    "observed_share": 0.8581,
+    "imputed_share": 0.0998,
+    "missing_share": 0.042
+  }
+}
