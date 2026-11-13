@@ -77,32 +77,46 @@ def step_evaluate(ablations: bool = True) -> None:
     preds, meta = evaluate.run(df, variants)
     print(f"walk-forward done in {time.time() - t0:.0f}s")
     preds.to_parquet(PREDS, index=False)
+    meta["importance"].rename("gain").to_csv(C.ARTIFACTS / "feature_importance.csv")
+    evaluate.save_json({"folds": meta["folds"], "variants": list(variants), "params": evaluate.PARAMS},
+                       C.ARTIFACTS / "folds.json")
 
-    main = [*evaluate.BASELINES, "lightgbm"]
-    allm = [*evaluate.BASELINES, *variants]
+
+def step_report() -> None:
+    """Metrics, confidence intervals and per-group tables from the saved walk-forward predictions."""
+    preds = evaluate.add_shipped(pd.read_parquet(PREDS))
+    preds.to_parquet(PREDS, index=False)
+    run_meta = json.loads((C.ARTIFACTS / "folds.json").read_text())
+    variants = run_meta["variants"]
+    ship = evaluate.SHIPPED
+    main = [*evaluate.BASELINES, "lightgbm", ship]
+    allm = [*evaluate.BASELINES, *variants, ship]
     A = C.ARTIFACTS
     overall = evaluate.metrics(preds, allm)
     by_h = evaluate.metrics(preds, main, ["h"])
     by_fold = evaluate.metrics(preds, main, ["fold"])
+    by_fold_h1 = evaluate.metrics(preds[preds["h"] == 1], main, ["fold"])
     by_station = evaluate.metrics(preds, main, ["station_key"])
     by_hour = preds.assign(hour=preds["target_ts"].dt.tz_convert(C.TZ).dt.hour)
     by_hour = evaluate.metrics(by_hour, main, ["hour"])
     by_h.to_csv(A / "metrics_by_horizon.csv", index=False)
     by_fold.to_csv(A / "metrics_by_fold.csv", index=False)
+    by_fold_h1.to_csv(A / "metrics_by_fold_30min.csv", index=False)
     by_station.to_csv(A / "metrics_by_station.csv", index=False)
     by_hour.to_csv(A / "metrics_by_hour.csv", index=False)
-    meta["importance"].rename("gain").to_csv(A / "feature_importance.csv")
 
+    others = [*evaluate.BASELINES, *[v for v in variants if v != "lightgbm"]]
     mask = evaluate.scoring_mask(preds, allm)
     summary = {
         "overall": overall.iloc[0].to_dict(),
         "scored_rows": int(mask.sum()),
         "test_rows_with_observed_target": int(preds["y_target"].notna().sum()),
-        "folds": meta["folds"],
-        "lightgbm_vs": {b: evaluate.bootstrap_mae_diff(preds, "lightgbm", b, allm)
-                        for b in [*evaluate.BASELINES, *[v for v in variants if v != "lightgbm"]]},
+        "folds": run_meta["folds"],
+        "shipped": {"persistence_horizons": sorted(evaluate.PERSISTENCE_HORIZONS), "model": "lightgbm"},
+        "shipped_vs": {b: evaluate.bootstrap_mae_diff(preds, ship, b, allm) for b in [*evaluate.BASELINES, "lightgbm"]},
+        "lightgbm_vs": {b: evaluate.bootstrap_mae_diff(preds, "lightgbm", b, allm) for b in others},
         "lightgbm_vs_by_horizon": {},
-        "params": evaluate.PARAMS,
+        "params": run_meta["params"],
     }
     for h in sorted(preds["h"].unique()):
         ph = preds[preds["h"] == h]
@@ -111,15 +125,16 @@ def step_evaluate(ablations: bool = True) -> None:
     evaluate.save_json(summary, A / "metrics.json")
     print(overall.T)
     print(by_h)
+    print(by_fold_h1)
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--step", choices=["ingest", "clean", "features", "evaluate", "all"], default="all")
+    ap.add_argument("--step", choices=["ingest", "clean", "features", "evaluate", "report", "all"], default="all")
     ap.add_argument("--no-ablations", action="store_true")
     args = ap.parse_args()
     C.ARTIFACTS.mkdir(parents=True, exist_ok=True)
-    steps = ["ingest", "clean", "features", "evaluate"] if args.step == "all" else [args.step]
+    steps = ["ingest", "clean", "features", "evaluate", "report"] if args.step == "all" else [args.step]
     for s in steps:
         t0 = time.time()
         print(f"== {s}")

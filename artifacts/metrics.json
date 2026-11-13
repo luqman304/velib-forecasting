@@ -12,7 +12,9 @@
     "lightgbm_no_covid_mae": 2.2735564698782196,
     "lightgbm_no_covid_rmse": 3.5139860679531205,
     "lightgbm_no_weather_mae": 2.277900938982052,
-    "lightgbm_no_weather_rmse": 3.5174293958908645
+    "lightgbm_no_weather_rmse": 3.5174293958908645,
+    "shipped_mae": 2.2610851114158628,
+    "shipped_rmse": 3.5181724639371534
   },
   "scored_rows": 864410,
   "test_rows_with_observed_target": 877260,
@@ -74,6 +76,38 @@
       "test_rows": 76620
     }
   ],
+  "shipped": {
+    "persistence_horizons": [
+      1
+    ],
+    "model": "lightgbm"
+  },
+  "shipped_vs": {
+    "persistence": {
+      "diff": -0.6328390680822918,
+      "ci_low": -0.663374720832631,
+      "ci_high": -0.6047176652309609,
+      "blocks": 3240
+    },
+    "seasonal_naive_day": {
+      "diff": -2.132258325147805,
+      "ci_low": -2.1990968608712422,
+      "ci_high": -2.070051098084539,
+      "blocks": 3240
+    },
+    "seasonal_naive_week": {
+      "diff": -3.200414639859573,
+      "ci_low": -3.3308103765176917,
+      "ci_high": -3.0679601438525514,
+      "blocks": 3240
+    },
+    "lightgbm": {
+      "diff": -0.014295818453577483,
+      "ci_low": -0.015384730481737094,
+      "ci_high": -0.01322020483843296,
+      "blocks": 3240
+    }
+  },
   "lightgbm_vs": {
     "persistence": {
       "diff": -0.6185432496287144,

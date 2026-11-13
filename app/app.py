@@ -22,7 +22,8 @@ st.set_page_config(page_title="Vélib' availability forecasting", page_icon="�
 
 A = C.ARTIFACTS
 METHODS = {
-    "lightgbm": ("LightGBM", "#1f6feb"),
+    "shipped": ("Shipped: last value at 30 min, LightGBM from 1 h", "#1f6feb"),
+    "lightgbm": ("LightGBM (all horizons)", "#6ea8fe"),
     "persistence": ("Persistence (last value)", "#8b949e"),
     "seasonal_naive_day": ("Seasonal naive, same time yesterday", "#d29922"),
     "seasonal_naive_week": ("Seasonal naive, same time last week", "#bc4c00"),
@@ -30,6 +31,11 @@ METHODS = {
 ABLATIONS = {"lightgbm_no_weather": "LightGBM without weather features",
              "lightgbm_no_covid": "LightGBM without COVID-restriction features"}
 LABELS = {k: v[0] for k, v in METHODS.items()} | ABLATIONS
+
+
+def style(mth: str) -> dict:
+    return {"color": METHODS[mth][1], "width": 3 if mth == "shipped" else 1.5,
+            "dash": None if mth == "shipped" else ("dash" if mth == "lightgbm" else "dot")}
 H_LABEL = {1: "30 min", 2: "1 h", 4: "2 h", 8: "4 h", 16: "8 h", 48: "24 h"}
 RULES = {
     "R2_duplicate_rows_dropped": "R2 duplicate (station, timestamp) rows dropped",
@@ -58,8 +64,8 @@ def load():
     stations = pd.read_csv(A / "stations.csv", dtype={"station_code_today": str})
     by_station = pd.read_csv(A / "metrics_by_station.csv")
     stations = stations.merge(by_station, on="station_key", how="left")
-    stations["skill_vs_week"] = 1 - stations["lightgbm_mae"] / stations["seasonal_naive_week_mae"]
-    stations["skill_vs_persistence"] = 1 - stations["lightgbm_mae"] / stations["persistence_mae"]
+    stations["skill_vs_week"] = 1 - stations["shipped_mae"] / stations["seasonal_naive_week_mae"]
+    stations["skill_vs_persistence"] = 1 - stations["shipped_mae"] / stations["persistence_mae"]
     return preds, panel, stations
 
 
@@ -91,11 +97,11 @@ o = summary["overall"]
 c1, c2, c3, c4 = st.columns(4)
 c1.metric("Stations", len(stations))
 c2.metric("Walk-forward folds", len(summary["folds"]))
-c3.metric("LightGBM MAE (bikes)", f"{o['lightgbm_mae']:.2f}",
-          f"{o['lightgbm_mae'] - o['seasonal_naive_week_mae']:+.2f} vs seasonal naive (week)",
+c3.metric("Shipped forecaster MAE (bikes)", f"{o['shipped_mae']:.3f}",
+          f"{o['shipped_mae'] - o['seasonal_naive_week_mae']:+.2f} vs seasonal naive (week)",
           delta_color="inverse")
 c4.metric("vs persistence", f"{o['persistence_mae']:.2f}",
-          f"{o['lightgbm_mae'] - o['persistence_mae']:+.2f} LightGBM − persistence", delta_color="inverse")
+          f"{o['shipped_mae'] - o['persistence_mae']:+.2f} shipped − persistence", delta_color="inverse")
 
 # ---------------------------------------------------------------- station selection (map + picker)
 stations = stations.sort_values("name").reset_index(drop=True)
@@ -103,19 +109,19 @@ labels = [f"{r.name}  ·  {r.capacity:.0f} docks" for r in stations.itertuples()
 qp = st.query_params  # shareable links: ?station=<name>&origin=2021-03-09T08:00&tab=...
 if "station" not in st.session_state:
     by_name = {n: i for i, n in enumerate(stations["name"])}
-    st.session_state.station = by_name.get(qp.get("station"), int(stations["lightgbm_mae"].fillna(0).idxmax()))
+    st.session_state.station = by_name.get(qp.get("station"), int(stations["shipped_mae"].fillna(0).idxmax()))
 
 tab_fc, tab_eval, tab_dq, tab_live = st.tabs(["Forecast", "Evaluation", "Data quality", "Live feed"])
 
 with tab_fc:
     left, right = st.columns([2, 3])
     with left:
-        color_by = st.radio("Colour stations by", ["LightGBM skill vs seasonal naive (week)",
-                                                   "LightGBM skill vs persistence", "Mean bikes available"],
+        color_by = st.radio("Colour stations by", ["Skill vs seasonal naive (week)",
+                                                   "Skill vs persistence", "Mean bikes available"],
                             horizontal=False)
         m = stations.copy()
-        col = {"Mean": "mean_bikes", "LightGBM skill vs seasonal naive (week)": "skill_vs_week",
-               "LightGBM skill vs persistence": "skill_vs_persistence"}
+        col = {"Mean": "mean_bikes", "Skill vs seasonal naive (week)": "skill_vs_week",
+               "Skill vs persistence": "skill_vs_persistence"}
         col = "mean_bikes" if color_by.startswith("Mean") else col[color_by]
         # Rank-based colour (red = lowest, green = highest among these stations) so differences stay visible.
         v = m[col].rank(pct=True).fillna(0.5).to_numpy()
@@ -128,14 +134,14 @@ with tab_fc:
         m["sel"] = m.index == st.session_state.station
         m["radius"] = np.where(m["sel"], 260, 130)
         m["skill_txt"] = (m["skill_vs_week"] * 100).round(0).astype("Int64").astype(str) + " %"
-        m["mae_txt"] = m["lightgbm_mae"].round(2).astype(str)
+        m["mae_txt"] = m["shipped_mae"].round(2).astype(str)
         layer = pdk.Layer("ScatterplotLayer", m, id="stations", get_position=["lon", "lat"],
                           get_fill_color=["r", "g", "b", 220], get_radius="radius", radius_min_pixels=4, pickable=True,
                           stroked=True, get_line_color=[40, 40, 40], line_width_min_pixels=1)
         deck = pdk.Deck(layers=[layer], map_style=pdk.map_styles.CARTO_LIGHT,
                         initial_view_state=pdk.ViewState(latitude=m["lat"].mean(), longitude=m["lon"].mean(),
                                                          zoom=10.6),
-                        tooltip={"text": "{name}\nLightGBM MAE {mae_txt}\nskill vs week-naive {skill_txt}"})
+                        tooltip={"text": "{name}\nshipped MAE {mae_txt}\nskill vs week-naive {skill_txt}"})
         event = st.pydeck_chart(deck, on_select="rerun", selection_mode="single-object", height=430,
                                 key="map")
         picked = (event.selection or {}).get("indices", {}).get("stations") if event else None
@@ -144,7 +150,7 @@ with tab_fc:
             st.session_state.station = int(picked[0])
         st.session_state.map_pick = picked[0] if picked else None
         st.caption("Click a station on the map or pick it below. Colour = rank among the 60 stations "
-                   "(red lowest, green highest). Skill = 1 − MAE(LightGBM) / MAE(baseline).")
+                   "(red lowest, green highest). Skill = 1 − MAE(shipped) / MAE(baseline).")
         st.selectbox("Station", range(len(stations)), key="station", format_func=lambda i: labels[i])
     s = stations.iloc[st.session_state.station]
     key = s["station_key"]
@@ -157,7 +163,7 @@ with tab_fc:
                    + (f" · today's GBFS station code {s['station_code_today']}"
                       if isinstance(s.get("station_code_today"), str) and s["station_code_today"] else ""))
         k1, k2, k3 = st.columns(3)
-        k1.metric("LightGBM MAE", f"{s['lightgbm_mae']:.2f}")
+        k1.metric("Shipped MAE", f"{s['shipped_mae']:.2f}")
         k2.metric("Seasonal naive (week) MAE", f"{s['seasonal_naive_week_mae']:.2f}")
         k3.metric("Persistence MAE", f"{s['persistence_mae']:.2f}")
 
@@ -184,8 +190,7 @@ with tab_fc:
             xs = [pd.Timestamp(origin)] + list(fc["target_ts"])
             ys = [y0] + list(fc[mth])
             fig.add_trace(go.Scatter(x=local(pd.DatetimeIndex(xs)), y=ys, mode="lines+markers", name=label,
-                                     line=dict(color=colr, width=3 if mth == "lightgbm" else 1.5,
-                                               dash=None if mth == "lightgbm" else "dot")))
+                                     line=style(mth)))
         fig.add_vline(x=local(pd.DatetimeIndex([origin]))[0], line_dash="dash", line_color="#cf222e")
         fig.add_hline(y=s["capacity"], line_dash="dot", line_color="#8b949e",
                       annotation_text="capacity", annotation_position="top left")
@@ -202,10 +207,10 @@ with tab_fc:
         fig2 = go.Figure()
         fig2.add_trace(go.Scatter(x=local(r["target_ts"]), y=r["y_target"], mode="lines", name="Observed",
                                   line=dict(color="#24292f", width=2)))
-        for mth in ("lightgbm", "seasonal_naive_week", "persistence"):
+        for mth in ("shipped", "seasonal_naive_week", "persistence"):
             label, colr = METHODS[mth]
             fig2.add_trace(go.Scatter(x=local(r["target_ts"]), y=r[mth], mode="lines", name=label,
-                                      line=dict(color=colr, width=2 if mth == "lightgbm" else 1)))
+                                      line=dict(color=colr, width=2 if mth == "shipped" else 1)))
         fig2.update_layout(height=330, margin=dict(l=10, r=10, t=30, b=10), yaxis_title="bikes available",
                            legend=dict(orientation="h", y=-0.25),
                            title=f"{H_LABEL[h]}-ahead forecasts over the test week")
@@ -222,10 +227,15 @@ with tab_eval:
             rows.append({"method": LABELS[mth],
                          "MAE": o[f"{mth}_mae"], "RMSE": o[f"{mth}_rmse"]})
     st.dataframe(pd.DataFrame(rows).style.format({"MAE": "{:.3f}", "RMSE": "{:.3f}"}), hide_index=True)
-    ci = pd.DataFrame(summary["lightgbm_vs"]).T
-    ci.index = [LABELS[i] for i in ci.index]
+    st.caption("Shipped forecaster: the last observed value at 30 minutes (persistence beat LightGBM there in all "
+               "8 folds) and LightGBM from 1 hour on.")
+    ci = pd.concat([
+        pd.DataFrame(summary["shipped_vs"]).T.rename(index=lambda i: f"shipped − {LABELS[i]}"),
+        pd.DataFrame({k: v for k, v in summary["lightgbm_vs"].items() if k in ABLATIONS}).T.rename(
+            index=lambda i: f"LightGBM − {LABELS[i]}"),
+    ])
     ci["blocks"] = ci["blocks"].astype(int)
-    st.markdown("**MAE(LightGBM) − MAE(other)**, 95 % block-bootstrap CI over station-days (negative = LightGBM better)")
+    st.markdown("**MAE differences**, 95 % block-bootstrap CI over station-days (negative = first one better)")
     st.dataframe(ci[["diff", "ci_low", "ci_high", "blocks"]].style.format(
         {"diff": "{:+.3f}", "ci_low": "{:+.3f}", "ci_high": "{:+.3f}"}))
 
@@ -235,7 +245,7 @@ with tab_eval:
         f = go.Figure()
         for mth, (label, colr) in METHODS.items():
             f.add_trace(go.Scatter(x=[H_LABEL[h] for h in bh["h"]], y=bh[f"{mth}_{metric}"], name=label,
-                                   mode="lines+markers", line=dict(color=colr, width=3 if mth == "lightgbm" else 1.5)))
+                                   mode="lines+markers", line=style(mth)))
         f.update_layout(title=f"{metric.upper()} by horizon", height=340, yaxis_title="bikes",
                         margin=dict(l=10, r=10, t=40, b=10), legend=dict(orientation="h", y=-0.25))
         holder.plotly_chart(f, use_container_width=True)
@@ -253,14 +263,15 @@ with tab_eval:
     f = go.Figure()
     for mth, (label, colr) in METHODS.items():
         f.add_trace(go.Scatter(x=bhr["hour"], y=bhr[f"{mth}_mae"], name=label, mode="lines",
-                               line=dict(color=colr, width=3 if mth == "lightgbm" else 1.5)))
+                               line=style(mth)))
     f.update_layout(title="MAE by hour of day (target, Paris time)", height=340, xaxis_title="hour",
                     margin=dict(l=10, r=10, t=40, b=10), legend=dict(orientation="h", y=-0.3))
     cc4.plotly_chart(f, use_container_width=True)
 
     st.markdown("**Per station** (sortable)")
-    tbl = stations[["name", "capacity", "n", "lightgbm_mae", "seasonal_naive_week_mae", "seasonal_naive_day_mae",
-                    "persistence_mae", "skill_vs_week", "skill_vs_persistence"]].sort_values("lightgbm_mae")
+    tbl = stations[["name", "capacity", "n", "shipped_mae", "lightgbm_mae", "seasonal_naive_week_mae",
+                    "seasonal_naive_day_mae", "persistence_mae", "skill_vs_week", "skill_vs_persistence"]
+                   ].sort_values("shipped_mae")
     st.dataframe(tbl.style.format({c: "{:.2f}" for c in tbl.columns if c.endswith("_mae")}
                                   | {"skill_vs_week": "{:.0%}", "skill_vs_persistence": "{:.0%}",
                                      "capacity": "{:.0f}"}), hide_index=True, height=320)

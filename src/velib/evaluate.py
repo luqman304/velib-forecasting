@@ -37,6 +37,10 @@ PARAMS = {
 }
 MAX_ROUNDS = 2000
 
+# The shipped forecaster: persistence where it beats LightGBM in walk-forward (30 min), LightGBM elsewhere.
+PERSISTENCE_HORIZONS = {1}
+SHIPPED = "shipped"
+
 BASELINES = {
     "persistence": "lag0",
     "seasonal_naive_day": "seas_day",
@@ -113,6 +117,14 @@ def run(df: pd.DataFrame, variants: dict[str, list[str]] | None = None,
     preds = pd.concat(rows, ignore_index=True)
     imp = pd.concat(importances, axis=1).mean(axis=1).sort_values(ascending=False) if importances else None
     return preds, {"folds": meta, "importance": imp}
+
+
+def add_shipped(preds: pd.DataFrame) -> pd.DataFrame:
+    """Add the shipped forecast: the last value for horizons in PERSISTENCE_HORIZONS, LightGBM otherwise."""
+    preds = preds.copy()
+    use_last = preds["h"].isin(PERSISTENCE_HORIZONS)
+    preds[SHIPPED] = np.where(use_last, preds["persistence"], preds["lightgbm"])
+    return preds
 
 
 def scoring_mask(preds: pd.DataFrame, methods: list[str]) -> pd.Series:

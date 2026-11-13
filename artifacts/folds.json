@@ -1,0 +1,78 @@
+{
+  "folds": [
+    {
+      "fold": 0,
+      "test_start": "2021-02-15 00:00:00+01:00",
+      "test_end": "2021-02-22 00:00:00+01:00",
+      "train_rows": 1087254,
+      "test_rows": 113760
+    },
+    {
+      "fold": 1,
+      "test_start": "2021-02-22 00:00:00+01:00",
+      "test_end": "2021-03-01 00:00:00+01:00",
+      "train_rows": 1201014,
+      "test_rows": 114060
+    },
+    {
+      "fold": 2,
+      "test_start": "2021-03-01 00:00:00+01:00",
+      "test_end": "2021-03-08 00:00:00+01:00",
+      "train_rows": 1315134,
+      "test_rows": 112320
+    },
+    {
+      "fold": 3,
+      "test_start": "2021-03-08 00:00:00+01:00",
+      "test_end": "2021-03-15 00:00:00+01:00",
+      "train_rows": 1427334,
+      "test_rows": 112740
+    },
+    {
+      "fold": 4,
+      "test_start": "2021-03-15 00:00:00+01:00",
+      "test_end": "2021-03-22 00:00:00+01:00",
+      "train_rows": 1540374,
+      "test_rows": 112320
+    },
+    {
+      "fold": 5,
+      "test_start": "2021-03-22 00:00:00+01:00",
+      "test_end": "2021-03-29 00:00:00+02:00",
+      "train_rows": 1652754,
+      "test_rows": 114780
+    },
+    {
+      "fold": 6,
+      "test_start": "2021-03-29 00:00:00+02:00",
+      "test_end": "2021-04-05 00:00:00+02:00",
+      "train_rows": 1766814,
+      "test_rows": 120660
+    },
+    {
+      "fold": 7,
+      "test_start": "2021-04-05 00:00:00+02:00",
+      "test_end": "2021-04-09 17:00:00+02:00",
+      "train_rows": 1887414,
+      "test_rows": 76620
+    }
+  ],
+  "variants": [
+    "lightgbm",
+    "lightgbm_no_covid",
+    "lightgbm_no_weather"
+  ],
+  "params": {
+    "objective": "l2",
+    "learning_rate": 0.05,
+    "num_leaves": 63,
+    "min_data_in_leaf": 200,
+    "feature_fraction": 0.8,
+    "bagging_fraction": 0.8,
+    "bagging_freq": 1,
+    "lambda_l2": 1.0,
+    "num_threads": 4,
+    "verbose": -1,
+    "seed": 7
+  }
+}
