@@ -1,0 +1,52 @@
+name: collect-snapshots
+
+# Takes a snapshot of the Vélib' GBFS feed every 15 minutes and commits it to the orphan branch
+# `snapshots`, so the main branch stays free of data. GitHub runs scheduled jobs on a best-effort
+# basis (runs are often delayed or skipped under load), so the result is irregular sampling, which
+# the cleaning step is built to handle.
+
+on:
+  schedule:
+    - cron: "7,22,37,52 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: collect-snapshots
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install requests
+
+      - name: Check out the snapshots branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin snapshots; then
+            git fetch --depth=1 origin snapshots
+            git worktree add store origin/snapshots -B snapshots
+          else
+            git worktree add --orphan -b snapshots store
+          fi
+
+      - name: Snapshot
+        run: python scripts/collect.py --out store/data
+
+      - name: Commit
+        working-directory: store
+        run: |
+          git add data
+          git commit -q -m "snapshot $(date -u +%Y-%m-%dT%H:%MZ)" || exit 0
+          for i in 1 2 3; do git push origin snapshots && break; git pull --rebase origin snapshots; done

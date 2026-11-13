@@ -1,0 +1,22 @@
+[project]
+name = "velib-forecasting"
+version = "0.1.0"
+description = "Forecasting bike availability at Paris Vélib' stations from messy open data"
+requires-python = ">=3.11"
+dependencies = [
+  "pandas>=2.2", "numpy>=1.26", "pyarrow>=15", "requests>=2.31", "lightgbm>=4.3",
+  "streamlit>=1.35", "plotly>=5.20", "pydeck>=0.9",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
